@@ -4,7 +4,7 @@
 
 Iniciar Projeto:
 ```
-php artisa serve
+php artisan serve
 ```
 OU 
 
