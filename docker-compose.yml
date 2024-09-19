@@ -1,0 +1,81 @@
+# version: "4.1"
+
+services:
+#   web:
+#     image: nginx:latest
+#     ports:
+#       - "8001:8001"
+#     working_dir: /app/backend
+#     volumes:
+# #      - ./app/backend:/var/www/app/backend
+# #      - ./docker/nginx/site.conf:/etc/nginx/conf.d/site.conf
+# #      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+#       - ./docker/nginx/:/etc/nginx/conf.d/
+#     networks:
+#       - laravel
+
+  laravel:
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    container_name: laravel_app
+      # args:
+      #    PHP_VERSION: '8.1-fpm'
+#         PHP_VERSION: '7.4-fpm-bullseye'
+#        PHP_VERSION: 'drupalci/php-7.4.x-apache'
+    volumes:
+      - ./app/backend:/var/www/app/backend
+    ports:
+      - "8000:8000" #http
+      # - "443:443" #https
+    networks:
+      - app-network
+
+  database:
+    image: postgres:13-alpine
+    restart: always
+    ports:
+      - 32768:5432
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+    # or set shared memory limit when deploy via swarm stack
+    #volumes:
+    #  - type: tmpfs
+    #    target: /dev/shm
+    #    tmpfs:
+    #      size: 134217728 # 128*2^20 bytes = 128Mb
+    environment:
+      - POSTGRES_DB=gestao-de-gastos
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    volumes:
+        - db_data:/var/lib/postgresql/data:rw
+    networks:
+      - app-network
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 80:80
+    networks:
+      - app-network
+
+
+  vue:
+    build:
+      context: .
+      dockerfile: ./docker/frontend/Dockerfile
+    container_name: vue-app
+    ports:
+       - '8080:8080'
+    volumes:
+       - ./app/frontend:/var/www/app/frontend
+    networks:
+       - app-network
+
+networks:
+  app-network:
+    # driver: bride
+
+volumes:
+  db_data:
