@@ -12,23 +12,11 @@ class CalendarController extends Controller
      */
     public function index()
     {
-        $calendars[] = [
-            "id" => 1,
-            "start" => date('Y-m-d') . "T00:00:00", //"2021-09-10T10:00:00"
-            "end" => date('Y-m-d') . "T00:00:00", //"2021-09-10T10:00:00"
-            "text" => "Event Teste",
-            "backColor" => "#6aa84f",
-            "borderColor" => "#38761d"
-        ];
-        
-        $calendars[] = [
-            "id" => 2,
-            "start" => "2023-02-28T13:00:00",
-            "end" => "2025-02-28T16:00:00",
-            "text" => "Event Teste 2",
-            "backColor" => "#f1c232",
-            "borderColor" => "#bf9000",
-        ];
+        //now()->format('c')
+        //now()->toIso8601String();
+        // 2022-08-12T16:20:19+00:00
+
+        $calendars = Calendar::all();
 
         return response()->json([
             'success' => !!$calendars,
@@ -49,7 +37,15 @@ class CalendarController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $post = $request->all();
+        $calendar = new Calendar();
+        $calendar->fill($post);
+        $ok = $calendar->save();
+
+        return response()->json([
+            'success' => !!$ok,
+            'data' => []
+        ]);
     }
 
     /**
