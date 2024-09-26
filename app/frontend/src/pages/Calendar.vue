@@ -18,7 +18,7 @@ import CalendarComp2 from '../components/CalendarComp2.vue';
 
 
 function getDateNow() {
-  let dateToString = d => `${d.getFullYear()}-${('00' + (d.getMonth() + 1)).slice(-2)}-${('00' + d.getDate()).slice(-2)}` 
+  let dateToString = d => `${d.getFullYear()}-${('00' + (d.getMonth() + 1)).slice(-2)}-${('00' + d.getDate()).slice(-2)}`
   let date = new Date();
 
   return dateToString(date);
@@ -46,20 +46,49 @@ async function getEvents() {
       },
   ];
 
-  
+
   return events;
 }
 
+function setCookie(cname, cvalue) {
+  let d = new Date();
+  d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000);
+  let expires = "expires=" + d.toUTCString();
+  document.cookie =
+    cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+async function auth() {
+  let __token = getCookie('__token');
+  //setCookie('__token', __token);
+  console.log(getCookie('__token'))
+  return __token;
+}
 
 async function getCalendar() {
   let resp = [];
+  let __token = await auth();
   const options = {
     method: 'GET',
     headers: {
-      cookie: 'XSRF-TOKEN=eyJpdiI6InhCeXl6Z0QxcDFuUmhUd0tVR01TREE9PSIsInZhbHVlIjoiRlVQUGY2WHJybUIwVkhMVXhMN3Z1M3NTTjc1clRPY0FPZzc4YmFLa2hPbGxTY2ZYbTE2U2Fja0JmYitzM3RLc2ozMDJBVWl1K2l5VVllcGhaYS9nVlJNVGdvdlZtSXA3N0RoUVhFY3VEMm9hVUdoQlkyZi9MeCtJM3ZtanlWUnAiLCJtYWMiOiJlMDUyZjk3NzFmOGRkNWIyMGI4MDRlMWIxZjBhMjgyZWQ3NzI3ZTE2OTI5YmQ4OTMyMGRjYzNmMjM2MTdmZTM4IiwidGFnIjoiIn0%253D; laravel_session=eyJpdiI6IktNcUV4RFlyVWsreTNLQ2tzWlRkZ2c9PSIsInZhbHVlIjoiaW1vVW1PNjRKbnV0amNRc1hKN0R1SzNVQXZOb1UvSmc2amF6cWVsQ1lXQnZ2TzUzU2ptWVgycExCdEZrM2hnUDFRYTRraUJOTXEvNTZ0My9iTmFWc0s2VXRyYkI1UnVRQmFoUld0YzNkYmM1aWk4SlZ1bEJqOWpwUGFodnhscFUiLCJtYWMiOiIxMDg2NWZjYzVjNjhjNzE3MjFiMzM0YjljOWQ3M2ZlOTRlY2I5NDc1NzBkMmM0MDE3YjlmZWQ5OTNiMDAzZjY5IiwidGFnIjoiIn0%253D',
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: 'Bearer 6|qrFg34xSbYsVhh4fN67NRVrdIPPbK91saEalYH8le8015bd7'
+      Authorization: 'Bearer ' + __token
     }
   };
 
@@ -69,6 +98,37 @@ async function getCalendar() {
     .catch(err => console.error(err));
 
     return resp;
+}
+
+
+async function setCalendar(args) {
+  let resp = [];
+  let __token = await auth();
+
+  let body = {
+    "start":args.start,
+    "end":args.end,
+    "text":args.text,
+    "backColor":args.backColor,
+    "borderColor":args.borderColor
+  };
+
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: 'Bearer ' + __token
+    },
+    body: JSON.stringify(body)
+  };
+
+  await fetch('http://localhost:8000/api/calendar', options)
+    .then(response => resp = response.json() )
+    // .then(response => console.log(response))
+    .catch(err => console.error(err));
+
+  return resp;
 }
 
 
@@ -102,15 +162,28 @@ const config = reactive({
     const dp = args.control;
     dp.clearSelection();
     if (modal.canceled) { return; }
-    dp.events.add({
-      start: args.start,
-      end: args.end,
-      id: DayPilot.guid(),
-      text: modal.result
-    });
+    console.log(args);
 
-    console.log(args)
-    console.log(dp.events)
+    args.text = modal.result;
+    args.backColor = "#6aa84f";
+    args.borderColor = "#38761d";
+
+    setCalendar(args).then(function (resp) {
+      console.log(resp);
+      if(!resp.success) {
+        return false;
+      }
+      dp.events.add({
+        start: args.start,
+        end: args.end,
+        id: DayPilot.guid(),
+        text: modal.result
+      });
+
+
+      console.log(args)
+      console.log(dp.events)
+    });
   },
   onBeforeEventRender: args => {
     const color = colors[args.data.type] || "#3c78d8";

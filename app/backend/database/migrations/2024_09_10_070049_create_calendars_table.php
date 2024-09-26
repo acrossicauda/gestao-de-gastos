@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('calendars', function (Blueprint $table) {
             $table->id();
+            $table->timestamp('start'); // yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+            $table->timestamp('end'); // yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+            $table->string('text', 255)->nullable();
+            $table->string('backColor', 15)->nullable();
+            $table->string('borderColor', 15)->nullable();
             $table->timestamps();
         });
     }

@@ -31,47 +31,67 @@ services:
     networks:
       - app-network
 
-  database:
-    image: postgres:13-alpine
-    restart: always
-    ports:
-      - 32768:5432
-    # set shared memory limit when using docker-compose
-    shm_size: 128mb
-    # or set shared memory limit when deploy via swarm stack
-    #volumes:
-    #  - type: tmpfs
-    #    target: /dev/shm
-    #    tmpfs:
-    #      size: 134217728 # 128*2^20 bytes = 128Mb
+#  database:
+#    image: postgres:13-alpine
+#    restart: always
+#    ports:
+#      - 32768:5432
+#    # set shared memory limit when using docker-compose
+#    shm_size: 128mb
+#    # or set shared memory limit when deploy via swarm stack
+#    #volumes:
+#    #  - type: tmpfs
+#    #    target: /dev/shm
+#    #    tmpfs:
+#    #      size: 134217728 # 128*2^20 bytes = 128Mb
+#    environment:
+#      - POSTGRES_DB=gestao-de-gastos
+#      - POSTGRES_PASSWORD=postgres
+#      - POSTGRES_USER=postgres
+#    volumes:
+#        - db_data:/var/lib/postgresql/data:rw
+#    networks:
+#      - app-network
+#      -
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - 80:80
+#    networks:
+#      - app-network
+
+  mysql_db:
+    image: mysql:latest
     environment:
-      - POSTGRES_DB=gestao-de-gastos
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-    volumes:
-        - db_data:/var/lib/postgresql/data:rw
-    networks:
-      - app-network
-  adminer:
-    image: adminer
-    restart: always
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gestao-de-gastos
     ports:
-      - 80:80
+      - 3306:3306
     networks:
       - app-network
 
-
-  vue:
-    build:
-      context: .
-      dockerfile: ./docker/frontend/Dockerfile
-    container_name: vue-app
+  phpmyadmin:
+    image: phpmyadmin:latest
     ports:
-       - '8080:8080'
-    volumes:
-       - ./app/frontend:/var/www/app/frontend
+      - 9001:80
     networks:
-       - app-network
+      - app-network
+    environment:
+      - PMA_ARBITRARY=1
+
+
+#  vue:
+#    build:
+#      context: .
+#      dockerfile: ./docker/frontend/Dockerfile
+#    container_name: vue-app
+#    ports:
+#       - '8080:8080'
+#    volumes:
+#       - ./app/frontend:/var/www/app/frontend
+#    networks:
+#       - app-network
 
 networks:
   app-network:
