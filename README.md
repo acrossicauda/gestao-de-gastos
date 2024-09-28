@@ -1,4 +1,4 @@
-# Proejeto de estudos
+# Projeto de estudos (VueJS e Laravel)
 
 ### Rodando sem Docker:
 
